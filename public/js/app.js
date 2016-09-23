@@ -17,11 +17,11 @@ socket.on('connect', function () {
 socket.on('message', function (message) {
 	var momentTimestamp = moment.utc(message.timestamp);
 	// just a reference for jquery selector
-	var $message = jQuery('.messages');
-	//console.log('New message:');
-	//console.log(message.text);
+	var $messages = jQuery('.messages');
+	var $message = jQuery('<li class="list-group-item"></li>');
     $message.append('<p><strong>' + message.name + ' ' + momentTimestamp.local().format('h:mm a') + '</strong></p>');
 	$message.append('<p>' + message.text + '</p>');
+	$messages.append($message);
 });
 
 // Handles submitting of new message
