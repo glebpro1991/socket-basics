@@ -6,7 +6,6 @@ var socket = io();
 
 jQuery('.room-title').text(room);
 
-
 socket.on('connect', function () {
 	//console.log('Conncted to socket.io server!');
 	socket.emit('joinRoom', {

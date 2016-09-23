@@ -7,10 +7,43 @@ var io = require('socket.io')(http);
 
 app.use(express.static(__dirname + '/public'));
 
-var clientInfo = {};
+
+// define variable in whihc user info will be stored
+var clientInfo = {
+    '123abc' : {
+        name: "Andrew",
+        room: "LOTR Fans"
+    }
+};
+
+function sendCurrentUsers(socket) {
+    var info = clientInfo[socket.id];
+    var users = [];
+
+    // prevent searching for rooms that don't exist'
+    if(typeof info === undefined) {
+        return;
+    }
+
+    Object.keys(clientInfo).forEach(function(socketId) {
+        var userInfo = clientInfo[socketId];
+
+        if(info.room === userInfo.room) {
+            users.push(userInfo.name);
+        }
+    });
+
+    socket.emit('message', {
+        name: 'System',
+        text: 'Current users: ' + users.join(', '),
+        timestamp: moment().valueOf()
+    });
+}
 
 io.on('connection', function(socket) {
     //console.log('User connected via socket.io');
+
+    // leave chat room
     socket.on('disconnect', function() {
     // check if client info exists
     var userData = clientInfo[socket.id];
@@ -25,6 +58,7 @@ io.on('connection', function(socket) {
         }
     });
 
+    // join chat room
     socket.on('joinRoom', function(req) {
         clientInfo[socket.id] = req;
         socket.join(req.room);
@@ -36,9 +70,13 @@ io.on('connection', function(socket) {
     });
 
     socket.on('message', function(message) {
-        //console.log('Message received ' + message.text);
-        message.timestamp = moment().valueOf();
-        io.to(clientInfo[socket.id].room).emit('message', message);
+        // define a custom command that will invoke function that displays all the users
+        if(message.text === '@currentUsers') {
+            sendCurrentUsers(socket);
+        } else {
+            message.timestamp = moment().valueOf();
+            io.to(clientInfo[socket.id].room).emit('message', message);
+        }
     });
 
     socket.emit('message', {
